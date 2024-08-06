@@ -1,0 +1,18 @@
+server:
+  address: "[::]:8080"
+  num_rounds: 10
+
+client:
+  batch_size: 32
+  epochs: 1
+  learning_rate: 0.001
+  momentum: 0.9
+
+model:
+  input_channels: 3
+  num_classes: 10
+
+data:
+  dataset: "CIFAR10"
+  normalize_mean: [0.5, 0.5, 0.5]
+  normalize_std: [0.5, 0.5, 0.5]
