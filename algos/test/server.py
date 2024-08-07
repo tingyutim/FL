@@ -1,27 +1,21 @@
-import yaml
-import flwr as fl
+import torch
+from flwr.server import ServerConfig, ServerAppComponents
+from flwr.server.strategy import FedAvg
+from flwr.common import Context
 
-# Load configuration
-with open("algos/test/config.yaml", "r") as f:
-    config = yaml.safe_load(f)
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+NUM_PARTITIONS = 10
 
-def fit_config(rnd: int):
-    return {
-        "batch_size": config["client"]["batch_size"],
-        "local_epochs": config["client"]["epochs"],
-    }
-
-def main():
-    # Create strategy
-    strategy = fl.server.strategy.FedAvg(
-        fraction_fit=0.1,
-        min_fit_clients=10,
-        min_eval_clients=5,
-        min_available_clients=10,
-        on_fit_config_fn=fit_config,
+def server_fn(context: Context) -> ServerAppComponents:
+    # Create FedAvg strategy
+    strategy = FedAvg(
+        fraction_fit=0.3,
+        fraction_evaluate=0.3,
+        min_fit_clients=3,
+        min_evaluate_clients=3,
+        min_available_clients=NUM_PARTITIONS,
     )
-    # Start Flower server
-    fl.server.start_server(config={"num_rounds": config["server"]["num_rounds"]}, strategy=strategy)
 
-if __name__ == "__main__":
-    main()
+    # Configure the server for 3 rounds of training
+    config = ServerConfig(num_rounds=3)
+    return ServerAppComponents(strategy=strategy, config=config)
